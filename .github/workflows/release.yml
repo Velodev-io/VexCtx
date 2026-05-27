@@ -61,25 +61,23 @@ jobs:
 
       - name: Install Python dependencies
         run: uv sync
-        working-directory: vexon-os/VexCTX
 
       - name: Build PyInstaller daemon binary
         run: |
           uv run pyinstaller vexctx-daemon.spec --noconfirm
-        working-directory: vexon-os/VexCTX
 
       - name: Copy daemon sidecar to Tauri binaries dir (macOS/Linux)
         if: runner.os != 'Windows'
         run: |
           mkdir -p desktop/src-tauri/binaries
-          cp vexon-os/VexCTX/dist/vexctx-daemon desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}
+          cp dist/vexctx-daemon desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}
           chmod +x desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}
 
       - name: Copy daemon sidecar to Tauri binaries dir (Windows)
         if: runner.os == 'Windows'
         run: |
           New-Item -ItemType Directory -Force -Path desktop/src-tauri/binaries
-          Copy-Item vexon-os/VexCTX/dist/vexctx-daemon.exe desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}.exe
+          Copy-Item dist/vexctx-daemon.exe desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}.exe
         shell: pwsh
 
       # ── Linux system dependencies ──────────────────────────────────────────
