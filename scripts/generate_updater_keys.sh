@@ -31,8 +31,12 @@ mkdir -p "$KEY_DIR"
 echo "Generating new signing keypair..."
 cd "$DESKTOP_DIR"
 
-# Generate keypair using Tauri CLI
-npm run tauri signer generate -- -w "$KEY_FILE" 2>&1
+# Generate keypair using Tauri CLI (force overwrite if it already exists)
+FORCE_FLAG=""
+if [ -f "$KEY_FILE" ]; then
+  FORCE_FLAG="--force"
+fi
+npm run tauri signer generate -- -w "$KEY_FILE" $FORCE_FLAG 2>&1
 
 echo ""
 echo "══════════════════════════════════════════════════"
