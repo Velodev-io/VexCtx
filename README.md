@@ -14,10 +14,10 @@ Get the native VexCTX Desktop App for your platform:
 
 | Platform | Download Link | Installer / Package Type |
 |:---|:---|:---|
-| **macOS (Apple Silicon)** | [Download for Apple Silicon (M1/M2/M3/M4)](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.6_aarch64.dmg) | Disk Image (`aarch64.dmg`) |
+| **macOS (Apple Silicon)** | [Download for Apple Silicon (M1/M2/M3/M4)](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_aarch64.dmg) | Disk Image (`aarch64.dmg`) |
 | **macOS (Intel)** | *Temporarily unavailable — coming soon* | Disk Image (`x64.dmg`) |
-| **Windows** | [Download for Windows](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.6_x64-setup.exe) | Setup Installer (`x64-setup.exe`) |
-| **Linux** | [Download for Linux](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.6_amd64.AppImage) | Portable Executable (`amd64.AppImage`) |
+| **Windows** | [Download for Windows](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_x64-setup.exe) | Setup Installer (`x64-setup.exe`) |
+| **Linux** | [Download for Linux](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_amd64.AppImage) | Portable Executable (`amd64.AppImage`) |
 
 ---
 
