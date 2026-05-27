@@ -79,9 +79,9 @@ export default async function ChangelogPage() {
   return (
     <div
       style={{
-        maxWidth: '900px',
+        maxWidth: '800px',
         margin: '0 auto',
-        padding: '20px 20px 80px 20px',
+        padding: '30px 20px 80px 20px',
         display: 'flex',
         flexDirection: 'column',
         gap: '40px',
@@ -95,33 +95,34 @@ export default async function ChangelogPage() {
       <header
         style={{
           borderBottom: '1px solid var(--border-muted)',
-          paddingBottom: '20px',
+          paddingBottom: '24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          fontFamily: 'var(--font-mono)'
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 500
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link href="/" style={{ fontWeight: 'bold', color: 'var(--accent-orange)', textDecoration: 'none' }}>
-            [VEXCTX_PORTAL]
+          <Link href="/" style={{ fontWeight: 'bold', color: 'var(--accent-cyan)', textDecoration: 'none', fontSize: '18px', letterSpacing: '-0.5px' }}>
+            VexCTX
           </Link>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/changelog</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', border: '1px solid var(--border-muted)', padding: '2px 6px', borderRadius: '4px' }}>/changelog</span>
         </div>
-        <Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }} className="glitch-text">
-          [GO_BACK]
+        <Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }} className="glitch-text">
+          Back
         </Link>
       </header>
 
       {/* Page Title */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-blue)' }}>
-          [CONSOLE_SYS_LOGS]
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+          SYSTEM_LOG_INDEX
         </div>
         <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#fff', letterSpacing: '-1px' }}>
           System Logs & Updates
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6' }}>
           Chronological index of releases, security patches, and installer file compiles fetched directly from the deployment logs.
         </p>
       </div>
@@ -131,13 +132,13 @@ export default async function ChangelogPage() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '48px',
+          gap: '40px',
           position: 'relative',
           paddingLeft: '24px',
           borderLeft: '1px solid rgba(255, 255, 255, 0.05)'
         }}
       >
-        {releases.map((release, idx) => (
+        {releases.map((release) => (
           <div
             key={release.tag_name}
             style={{
@@ -149,18 +150,18 @@ export default async function ChangelogPage() {
           >
             {/* Dot Node Indicator */}
             <span
-              className="led led-orange"
+              className="led led-green"
               style={{
                 position: 'absolute',
-                left: '-29px',
-                top: '6px',
-                width: '10px',
-                height: '10px'
+                left: '-28px',
+                top: '22px',
+                width: '7px',
+                height: '7px'
               }}
             />
 
             {/* Version Card */}
-            <div className="deck-panel deck-panel-orange" style={{ padding: '24px', backgroundColor: 'rgba(10,12,18,0.4)' }}>
+            <div className="deck-panel" style={{ padding: '28px', backgroundColor: 'rgba(8,12,24,0.45)' }}>
               {/* Card Title Bar */}
               <div
                 style={{
@@ -169,13 +170,13 @@ export default async function ChangelogPage() {
                   alignItems: 'baseline',
                   borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                   paddingBottom: '12px',
-                  marginBottom: '16px',
+                  marginBottom: '20px',
                   flexWrap: 'wrap',
                   gap: '10px'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <h2 style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--accent-orange)' }}>
+                  <h2 style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
                     {release.tag_name}
                   </h2>
                   <span className="badge badge-tag">{release.name || 'System Compile'}</span>
@@ -208,7 +209,7 @@ export default async function ChangelogPage() {
 
               {/* Release Binaries File Readout */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-blue)', marginBottom: '4px' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-cyan)', marginBottom: '4px', opacity: 0.8 }}>
                   [BUILT_BINARY_ASSETS]
                 </div>
                 
@@ -222,26 +223,27 @@ export default async function ChangelogPage() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        padding: '12px 16px',
+                        padding: '14px 18px',
                         textDecoration: 'none',
                         color: 'var(--text-primary)',
-                        fontSize: '12px',
+                        fontSize: '13px',
                         fontFamily: 'var(--font-mono)',
                         border: '1px solid rgba(255, 255, 255, 0.04)',
-                        backgroundColor: 'rgba(255,255,255,0.01)'
+                        backgroundColor: 'rgba(255,255,255,0.01)',
+                        borderRadius: '8px'
                       }}
                     >
                       <span style={{ color: 'var(--text-primary)' }} className="glitch-text">
                         {asset.name}
                       </span>
-                      <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '11px' }}>
                         <span>SIZE: {formatSize(asset.size)}</span>
                         <span>DOWNLOADS: {asset.download_count}</span>
                       </div>
                     </a>
                   ))
                 ) : (
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                     No manual binaries compiled. Source available on GitHub.
                   </div>
                 )}
