@@ -149,6 +149,7 @@ Unlock on-device retrieval intelligence. All processing happens on your machine.
 - [x] Public documentation & onboarding guides
 - [x] Privacy policy & trust transparency page
 - [x] Launch at `vexctx.io`
+- [/] Upgrade landing page to custom Tactile Cyber-Deck theme with micro-animations (In Progress)
 
 **Exit Criteria:** A user can sign up, toggle to Pro, and have their local VexCTX app automatically recognize the Pro plan locally via signed JWT verification.
 
