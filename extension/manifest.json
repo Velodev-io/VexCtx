@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "VexCTX Context Capture",
+  "version": "1.0.0",
+  "description": "Securely and silently captures local AI chat interactions (Claude, ChatGPT, Gemini, Perplexity) and streams them to the local VexCTX daemon.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*.claude.ai/*",
+    "https://*.chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://*.perplexity.ai/*"
+  ],
+  "background": {
+    "service_worker": "background/service_worker.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "assets/icon.svg"
+  },
+  "icons": {
+    "16": "assets/icon.svg",
+    "32": "assets/icon.svg",
+    "48": "assets/icon.svg",
+    "128": "assets/icon.svg"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.claude.ai/*"],
+      "js": ["content/bridge.js", "content/claude.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.chatgpt.com/*"],
+      "js": ["content/bridge.js", "content/chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content/bridge.js", "content/gemini.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.perplexity.ai/*"],
+      "js": ["content/bridge.js", "content/perplexity.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

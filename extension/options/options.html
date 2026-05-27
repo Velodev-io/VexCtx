@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VexCTX Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0B0F19;
+      --bg-card: #141B2E;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --primary-color: #6366F1;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --success-color: #10B981;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    
+    label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .help-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    
+    input[type="text"], textarea, select {
+      background-color: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--primary-color);
+    }
+    
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: var(--primary-color);
+      color: white;
+      transition: background-color 0.2s;
+      align-self: flex-start;
+    }
+    
+    .btn:hover {
+      background-color: #4F46E5;
+    }
+    
+    .status-msg {
+      margin-left: 12px;
+      font-size: 14px;
+      color: var(--success-color);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .status-msg.show {
+      opacity: 1;
+    }
+    
+    .actions {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>VexCTX Extension Settings</h1>
+  <p class="subtitle">Configure your privacy rules and daemon connectivity preferences.</p>
+
+  <div class="card">
+    <div class="form-group">
+      <label for="blacklist">Privacy Blacklist (Keywords)</label>
+      <div class="help-text">Any conversation containing these words will be ignored by VexCTX (one per line). Use for credentials, secret keys, or private identifiers.</div>
+      <textarea id="blacklist" placeholder="password&#10;api_key&#10;secret"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-group">
+      <label for="daemon-url">Local Daemon Base URL</label>
+      <div class="help-text">Change this only if you configured VexCTX daemon to run on a non-default port.</div>
+      <input type="text" id="daemon-url" value="http://localhost:8765">
+    </div>
+    
+    <div class="form-group" style="margin-top: 20px;">
+      <label for="session-expiry">Session Regeneration Interval</label>
+      <div class="help-text">A new session ID is generated automatically after this duration of tab inactivity.</div>
+      <select id="session-expiry">
+        <option value="1">1 Hour</option>
+        <option value="2" selected>2 Hours</option>
+        <option value="4">4 Hours</option>
+        <option value="8">8 Hours</option>
+        <option value="24">24 Hours</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="save-btn" class="btn">Save Configuration</button>
+    <span id="status" class="status-msg">Settings saved successfully!</span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

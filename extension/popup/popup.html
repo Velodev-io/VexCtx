@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VexCTX Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo">V</div>
+        <div class="brand-text">
+          <h1>VexCTX</h1>
+          <p>Local Memory Layer</p>
+        </div>
+      </div>
+      <div class="status-badge" id="status-badge">
+        <span class="status-dot"></span>
+        <span class="status-text" id="status-text">Checking...</span>
+      </div>
+    </header>
+
+    <!-- Master Switch Card -->
+    <div class="card master-card">
+      <div class="master-info">
+        <h3>Master Capture</h3>
+        <p>Enable or pause all background scraper hooks</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="master-toggle" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+
+    <!-- Active Scrapers -->
+    <section class="section">
+      <h2>Active Scrapers</h2>
+      <div class="scrapers-list">
+        <!-- Claude -->
+        <div class="scraper-item">
+          <div class="scraper-info">
+            <span class="scraper-icon claude">C</span>
+            <div class="scraper-details">
+              <h4>Claude.ai</h4>
+              <p>Anthropic chat sessions</p>
+            </div>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="toggle-claude" data-domain="claude.ai">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <!-- ChatGPT -->
+        <div class="scraper-item">
+          <div class="scraper-info">
+            <span class="scraper-icon chatgpt">G</span>
+            <div class="scraper-details">
+              <h4>ChatGPT.com</h4>
+              <p>OpenAI chat sessions</p>
+            </div>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="toggle-chatgpt" data-domain="chatgpt.com">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <!-- Gemini -->
+        <div class="scraper-item">
+          <div class="scraper-info">
+            <span class="scraper-icon gemini">G</span>
+            <div class="scraper-details">
+              <h4>Gemini</h4>
+              <p>Google chat sessions</p>
+            </div>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="toggle-gemini" data-domain="gemini.google.com">
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <!-- Perplexity -->
+        <div class="scraper-item">
+          <div class="scraper-info">
+            <span class="scraper-icon perplexity">P</span>
+            <div class="scraper-details">
+              <h4>Perplexity.ai</h4>
+              <p>Perplexity threads</p>
+            </div>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="toggle-perplexity" data-domain="perplexity.ai">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats & Sync Status -->
+    <div class="card status-card offline" id="connection-warning">
+      <div class="warning-content">
+        <p>Daemon is offline. Start the VexCTX daemon locally on port 8765 to pair and resume capture.</p>
+        <button id="retry-btn" class="btn secondary">Pair Now</button>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <footer class="footer">
+      <div class="stats-info">
+        <span class="stats-num" id="queue-count">0</span>
+        <span class="stats-label">queued locally</span>
+      </div>
+      <button id="open-dashboard" class="btn primary">Open Vault</button>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

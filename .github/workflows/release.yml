@@ -1,0 +1,210 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            daemon_suffix: aarch64-apple-darwin
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            daemon_suffix: x86_64-apple-darwin
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            daemon_suffix: x86_64-pc-windows-msvc
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            daemon_suffix: x86_64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Rust ──────────────────────────────────────────────────────────────
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './desktop/src-tauri -> target'
+
+      # ── Node ──────────────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dependencies
+        run: npm install
+        working-directory: desktop
+
+      # ── Python + uv + PyInstaller daemon ─────────────────────────────────
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python dependencies
+        run: uv sync
+        working-directory: vexon-os/VexCTX
+
+      - name: Build PyInstaller daemon binary
+        run: |
+          uv run pyinstaller vexctx-daemon.spec --noconfirm
+        working-directory: vexon-os/VexCTX
+
+      - name: Copy daemon sidecar to Tauri binaries dir (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p desktop/src-tauri/binaries
+          cp vexon-os/VexCTX/dist/vexctx-daemon desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}
+          chmod +x desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}
+
+      - name: Copy daemon sidecar to Tauri binaries dir (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path desktop/src-tauri/binaries
+          Copy-Item vexon-os/VexCTX/dist/vexctx-daemon.exe desktop/src-tauri/binaries/vexctx-daemon-${{ matrix.daemon_suffix }}.exe
+        shell: pwsh
+
+      # ── Linux system dependencies ──────────────────────────────────────────
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # ── Build & Sign with Tauri ────────────────────────────────────────────
+      - name: Build and release with Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ── Updater signing (required — generate with scripts/generate_updater_keys.sh) ──
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # ── macOS code signing (optional — activate when Apple Developer cert is ready) ──
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # ── macOS notarization (optional — activate when Apple Developer account is ready) ──
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # ── Windows code signing (optional — activate when PFX cert is ready) ──
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: 'VexCTX ${{ github.ref_name }}'
+          releaseBody: |
+            ## What's new in ${{ github.ref_name }}
+
+            See the full changelog in CHANGELOG.md.
+
+            ### Installation
+            - **macOS (Apple Silicon):** Download `VexCTX_*_aarch64.dmg`
+            - **macOS (Intel):** Download `VexCTX_*_x64.dmg`
+            - **Windows:** Download `VexCTX_*_x64-setup.exe`
+            - **Linux:** Download `VexCTX_*_amd64.AppImage`
+
+            > **macOS users:** If you see "unidentified developer" warning, right-click the app → Open → Open Anyway (or allow in System Settings → Privacy & Security).
+          releaseDraft: false
+          prerelease: false
+
+  # ── Update latest.json on vexctx.io ───────────────────────────────────────
+  publish-manifest:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get release version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Fetch release asset URLs from GitHub API
+        id: assets
+        run: |
+          RELEASE_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref_name }}")
+          
+          # Extract asset download URLs
+          DMG_AARCH64=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'aarch64.dmg' in a['name'] and '.sig' not in a['name']), ''))")
+          DMG_X64=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'x64.dmg' in a['name'] and '.sig' not in a['name']), ''))")
+          EXE=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'setup.exe' in a['name'] and '.sig' not in a['name']), ''))")
+          APPIMAGE=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if '.AppImage' in a['name'] and '.sig' not in a['name']), ''))")
+          
+          SIG_DMG_AARCH64=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'aarch64.dmg.sig' in a['name']), ''))")
+          SIG_DMG_X64=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'x64.dmg.sig' in a['name']), ''))")
+          SIG_EXE=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if 'setup.exe.sig' in a['name']), ''))")
+          SIG_APPIMAGE=$(echo "$RELEASE_DATA" | python3 -c "import sys,json; assets=json.load(sys.stdin)['assets']; print(next((a['browser_download_url'] for a in assets if '.AppImage.sig' in a['name']), ''))")
+          
+          echo "DMG_AARCH64=$DMG_AARCH64" >> $GITHUB_OUTPUT
+          echo "DMG_X64=$DMG_X64" >> $GITHUB_OUTPUT
+          echo "EXE=$EXE" >> $GITHUB_OUTPUT
+          echo "APPIMAGE=$APPIMAGE" >> $GITHUB_OUTPUT
+          echo "SIG_DMG_AARCH64=$SIG_DMG_AARCH64" >> $GITHUB_OUTPUT
+          echo "SIG_DMG_X64=$SIG_DMG_X64" >> $GITHUB_OUTPUT
+          echo "SIG_EXE=$SIG_EXE" >> $GITHUB_OUTPUT
+          echo "SIG_APPIMAGE=$SIG_APPIMAGE" >> $GITHUB_OUTPUT
+
+      - name: Generate latest.json manifest
+        run: |
+          RELEASE_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          python3 - <<EOF
+          import json, os
+          
+          version = "${{ steps.version.outputs.VERSION }}"
+          date = "$RELEASE_DATE"
+          notes = "See https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }} for full changelog."
+          
+          manifest = {
+            "version": version,
+            "notes": notes,
+            "pub_date": date,
+            "platforms": {}
+          }
+          
+          platforms = {
+            "darwin-aarch64": ("${{ steps.assets.outputs.DMG_AARCH64 }}", "${{ steps.assets.outputs.SIG_DMG_AARCH64 }}"),
+            "darwin-x86_64":  ("${{ steps.assets.outputs.DMG_X64 }}", "${{ steps.assets.outputs.SIG_DMG_X64 }}"),
+            "windows-x86_64": ("${{ steps.assets.outputs.EXE }}", "${{ steps.assets.outputs.SIG_EXE }}"),
+            "linux-x86_64":   ("${{ steps.assets.outputs.APPIMAGE }}", "${{ steps.assets.outputs.SIG_APPIMAGE }}"),
+          }
+          
+          for platform, (url, sig) in platforms.items():
+            if url:
+              manifest["platforms"][platform] = {"url": url, "signature": sig}
+          
+          with open("latest.json", "w") as f:
+            json.dump(manifest, f, indent=2)
+          print("Generated latest.json:")
+          print(json.dumps(manifest, indent=2))
+          EOF
+
+      - name: Commit updated latest.json to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add latest.json
+          git commit -m "chore: update latest.json for ${{ github.ref_name }} [skip ci]"
+          git push origin HEAD:main

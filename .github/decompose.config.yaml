@@ -1,0 +1,122 @@
+# decompose.config.yaml
+# Configuration for the Vexon OS Decompose Investigation Agent.
+# Read this file first on every invocation before loading skills.
+
+# ─── Knowledge Sources ────────────────────────────────────────────────────────
+knowledge_sources:
+  - type: agent_graph
+    path: experiments/decompose/graphify-out/graph.json
+    description: History of all prior decompose investigations for this repo.
+  - type: project_graph
+    path: graphify-out/graph.json
+    description: AST-level code structure of the Vexon OS project.
+  - type: status
+    path: track/STATUS.md
+  - type: bugs
+    path: track/BUGS.md
+  - type: guidelines
+    path: track/GUIDELINES.md
+  - type: product_plan
+    path: finalPlan/
+    glob: "PRODUCT_*.md"
+  - type: experiment_logs
+    path: logs/experiment-events.jsonl
+
+# ─── Agent Memory ─────────────────────────────────────────────────────────────
+agent_memory:
+  root: experiments/decompose/
+  runs_file: runs.jsonl
+  tree_file: tree.md
+  learnings_file: learnings.md
+  handoff_file: handoff.md
+
+# ─── Hand-Off Targets ─────────────────────────────────────────────────────────
+handoff_targets:
+  bug-fix-agent:
+    description: Applies the verified minimal fix produced by the decompose agent.
+    brief_path: "experiments/decompose/{slug}/handoff.md"
+    agent_prompt_file: ".github/skills/bug-fix-agent/SKILL.md"
+  code-review-agent:
+    description: Reviews the patched code after the bug-fix agent applies a change.
+    brief_path: "experiments/decompose/{slug}/handoff.md"
+    agent_prompt_file: "CODE_REVIEW_AGENT.md"
+
+# ─── Sandbox Tools ────────────────────────────────────────────────────────────
+sandbox_tools:
+  curl:
+    type: read_only
+    description: HTTP endpoint behavior, response shape, status codes.
+  grep:
+    type: read_only
+    description: Code presence, route registration, hardcoded values.
+  redis-cli:
+    type: read_only
+    description: Key existence, TTL, value, list/hash contents.
+  psql:
+    type: read_only
+    description: Row existence, schema column, FK validity.
+  docker-logs:
+    type: read_only
+    description: Last-resort container runtime log inspection.
+  trace-file:
+    type: read_only
+    description: Distributed event flow in logs/experiment-events.jsonl.
+  playwright:
+    type: destructive
+    description: UI interaction that cannot be triggered any other way.
+  full-stack-boot:
+    type: destructive
+    description: Start all services. Last resort — requires explicit user approval.
+
+# ─── Execution Limits ─────────────────────────────────────────────────────────
+limits:
+  max_depth: 4
+  max_leaves_per_session: 20
+  max_minutes_per_leaf: 10
+
+# ─── Auto-Execute Policy ──────────────────────────────────────────────────────
+auto_execute:
+  read_only_tools: true      # Run curl, grep, redis-cli, psql, docker-logs, trace-file without asking.
+  destructive_tools: false   # Always ask before playwright or full-stack-boot.
+
+# ─── Graphify Integration ─────────────────────────────────────────────────────
+graphify:
+  agent_graph:
+    path: experiments/decompose/graphify-out/
+    rebuild_cmd: "graphify update experiments/decompose/"
+    rebuild_trigger: phase_g   # Rebuild at Phase G after each investigation.
+  project_graph:
+    path: graphify-out/
+    rebuild_cmd: "graphify update ."
+    rebuild_trigger: manual
+
+  # Queries to run during knowledge-base checks.
+  # graph: agent  → query experiments/decompose/graphify-out/graph.json
+  # graph: project → query graphify-out/graph.json
+  wiki_queries:
+    - question: "Has this objective or a similar bug been investigated before?"
+      graph: agent
+    - question: "Which source files are involved in this behavior?"
+      graph: project
+    - question: "Is this a god node with many dependents?"
+      graph: project
+    - question: "Which community or module owns this code?"
+      graph: project
+    - question: "Which prior investigations touched this file?"
+      graph: agent
+
+  # Graph node/edge schema that graphify extracts from investigation markdown.
+  schema:
+    node_types:
+      - Investigation    # from learnings.md header
+      - Variable         # from tree.md ## VAR-N headings
+      - FileRef          # inline `path:line` citations
+      - Bug              # inline BUG-NNN tokens
+      - Trace            # inline trace:<id>:<event> tokens
+      - Experiment       # from runs.jsonl entries
+    edge_types:
+      - depends_on       # VAR depends_on VAR
+      - cites            # Variable → FileRef / Bug / Trace
+      - part_of          # Variable → Investigation
+      - resolved_by      # Variable → Experiment
+      - handoff_to       # Investigation → handoff_targets key

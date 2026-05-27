@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Allow outbound HTTPS connections (required for update checks to vexctx.io) -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Required for WKWebView JIT compilation (Tauri's WebView renderer) -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+
+    <!-- Required for WKWebView in Tauri on macOS 10.15+ -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+
+    <!-- Disable library validation to allow the bundled vexctx-daemon sidecar to load -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
