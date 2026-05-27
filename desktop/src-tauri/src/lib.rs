@@ -266,7 +266,8 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(move |app_handle, event| {
-            // Reopen main window when clicking on dock icon
+            // Reopen main window when clicking on dock icon (macOS only)
+            #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen { .. } = event {
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let _ = window.show();
