@@ -14,10 +14,10 @@ Get the native VexCTX Desktop App for your platform:
 
 | Platform | Download Link | Installer / Package Type |
 |:---|:---|:---|
-| **macOS (Apple Silicon)** | [Download for Apple Silicon (M1/M2/M3/M4)](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.0/VexCTX_1.0.0_aarch64.dmg) | Disk Image (`aarch64.dmg`) |
-| **macOS (Intel)** | [Download for Intel Mac](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.0/VexCTX_1.0.0_x64.dmg) | Disk Image (`x64.dmg`) |
-| **Windows** | [Download for Windows](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.0/VexCTX_1.0.0_x64-setup.exe) | Setup Installer (`x64-setup.exe`) |
-| **Linux** | [Download for Linux](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.0/VexCTX_1.0.0_amd64.AppImage) | Portable Executable (`amd64.AppImage`) |
+| **macOS (Apple Silicon)** | [Download for Apple Silicon (M1/M2/M3/M4)](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.5/VexCTX_1.0.5_aarch64.dmg) | Disk Image (`aarch64.dmg`) |
+| **macOS (Intel)** | *Temporarily unavailable — coming soon* | Disk Image (`x64.dmg`) |
+| **Windows** | [Download for Windows](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.5/VexCTX_1.0.5_x64-setup.exe) | Setup Installer (`x64-setup.exe`) |
+| **Linux** | [Download for Linux](https://github.com/Velodev-io/VexCtx/releases/download/v1.0.5/VexCTX_1.0.5_amd64.AppImage) | Portable Executable (`amd64.AppImage`) |
 
 ---
 
@@ -272,13 +272,14 @@ See the full phased roadmap in [ROADMAP.md](./ROADMAP.md). Summary:
 - [x] Documentation and support hub
 > Note: The portal manages accounts and licenses only. No user vault data is ever sent to or stored on the portal.
 
-### 🔲 Phase 4 — Native App (.dmg / .exe)
-- [ ] Tauri/Electron shell with bundled Python daemon
-- [ ] macOS menu bar agent & Windows system tray
+### ✅ Phase 4 — Native App (.dmg / .exe) (Complete)
+- [x] Tauri shell with bundled Python daemon
+- [x] macOS menu bar agent & Windows system tray
+- [x] In-app vault browser, timeline, and export
+- [x] Auto-updater via GitHub Releases
 - [ ] Onboarding wizard with privacy consent flow
-- [ ] In-app vault browser, timeline, and export
-- [ ] Auto-updater via GitHub Releases
 - [ ] Code signing & notarization (macOS + Windows)
+- [ ] macOS Intel (x86_64) build
 
 ### 🔲 Phase 5 — Package Manager Distribution
 - [ ] PyPI package (`pipx install vexctx`)
