@@ -4,51 +4,65 @@ import React, { useEffect, useState } from 'react';
 
 type CellState = 'empty' | 'active' | 'indexed' | 'pruned';
 
-export default function DatabaseGrid() {
+export default function DatabaseGrid({ retentionDays = 30 }: { retentionDays?: string | number }) {
   const [grid, setGrid] = useState<CellState[]>([]);
   const rows = 12;
   const cols = 12;
   const totalCells = rows * cols;
 
   useEffect(() => {
-    // Initialize the grid with mostly indexed (green) cells on the bottom and empty cells on top
+    // Determine max filled rows based on retentionDays
+    let maxFilledRows = 6;
+    if (retentionDays === 7) maxFilledRows = 3;
+    else if (retentionDays === 30) maxFilledRows = 6;
+    else if (retentionDays === 90) maxFilledRows = 9;
+    else if (retentionDays === 'Permanent') maxFilledRows = 11;
+
     const initialGrid: CellState[] = [];
     for (let i = 0; i < totalCells; i++) {
       const rowIdx = Math.floor(i / cols);
-      if (rowIdx > 8) {
-        // Lower rows are already indexed
-        initialGrid.push(Math.random() > 0.15 ? 'indexed' : 'empty');
-      } else if (rowIdx > 4) {
-        initialGrid.push(Math.random() > 0.6 ? 'indexed' : 'empty');
+      const distanceFromBottom = rows - 1 - rowIdx;
+      if (distanceFromBottom < maxFilledRows) {
+        initialGrid.push(Math.random() > 0.25 ? 'indexed' : 'empty');
       } else {
         initialGrid.push('empty');
       }
     }
     setGrid(initialGrid);
-  }, []);
+  }, [retentionDays]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
     const runSimulationLoop = () => {
-      // Pick a random operation: Ingestion/Indexing OR Compaction/Pruning
       const isCompacting = Math.random() > 0.65;
 
       setGrid((prev) => {
         const nextGrid = [...prev];
 
+        // Determine max allowed rows based on retentionDays
+        let maxAllowedRows = 6;
+        if (retentionDays === 7) maxAllowedRows = 3;
+        else if (retentionDays === 30) maxAllowedRows = 6;
+        else if (retentionDays === 90) maxAllowedRows = 9;
+        else if (retentionDays === 'Permanent') maxAllowedRows = 11;
+
         if (isCompacting) {
-          // 1. Simulate Compaction: move everything down, fill empty gaps
+          // 1. Simulate Compaction: move everything down, fill empty gaps, prune overflow
           for (let c = 0; c < cols; c++) {
             const columnStates: CellState[] = [];
-            // Extract column
             for (let r = 0; r < rows; r++) {
               const state = prev[r * cols + c];
               if (state !== 'empty' && state !== 'pruned') {
                 columnStates.push(state);
               }
             }
-            // Fill bottom rows of this column with the remaining states, and top rows with empty
+
+            // Prune top rows if exceeding local retention capacity limits
+            if (columnStates.length > maxAllowedRows) {
+              columnStates.splice(0, columnStates.length - maxAllowedRows);
+            }
+
             const emptyCount = rows - columnStates.length;
             for (let r = 0; r < rows; r++) {
               if (r < emptyCount) {
@@ -60,35 +74,45 @@ export default function DatabaseGrid() {
           }
         } else {
           // 2. Simulate Ingestion: activate cells in top rows, then turn them green (indexed)
-          // Pick a random column to ingest events
           const targetCol = Math.floor(Math.random() * cols);
-          for (let r = 0; r < 4; r++) {
-            const cellIdx = r * cols + targetCol;
-            nextGrid[cellIdx] = 'active'; // Orange glow
+          
+          // Calculate top empty cell in the column
+          let targetRow = -1;
+          for (let r = rows - 1; r >= 0; r--) {
+            if (prev[r * cols + targetCol] === 'empty') {
+              targetRow = r;
+              break;
+            }
           }
 
-          // Convert active cells to indexed cells after a short delay
-          setTimeout(() => {
-            setGrid((current) => {
-              const updated = [...current];
-              for (let i = 0; i < totalCells; i++) {
-                if (updated[i] === 'active') {
-                  updated[i] = 'indexed';
+          // If there is room, add active ingest particles
+          if (targetRow >= 0) {
+            const startRow = Math.max(0, targetRow - 2);
+            for (let r = startRow; r <= targetRow; r++) {
+              nextGrid[r * cols + targetCol] = 'active'; // Orange glow
+            }
+
+            setTimeout(() => {
+              setGrid((current) => {
+                const updated = [...current];
+                for (let i = 0; i < totalCells; i++) {
+                  if (updated[i] === 'active') {
+                    updated[i] = 'indexed';
+                  }
                 }
-              }
-              return updated;
-            });
-          }, 800);
+                return updated;
+              });
+            }, 800);
+          }
         }
 
-        // Randomly prune (turn a few cells red/empty to simulate retention deletion)
+        // Randomly prune cells to simulate active database maintenance
         if (Math.random() > 0.75) {
-          const pruneCount = 2 + Math.floor(Math.random() * 4);
+          const pruneCount = 1 + Math.floor(Math.random() * 3);
           for (let k = 0; k < pruneCount; k++) {
             const randIdx = Math.floor(Math.random() * totalCells);
             if (nextGrid[randIdx] === 'indexed') {
               nextGrid[randIdx] = 'pruned';
-              // After a short timeout, make them empty
               setTimeout(() => {
                 setGrid((current) => {
                   const updated = [...current];
@@ -109,7 +133,7 @@ export default function DatabaseGrid() {
     intervalId = setInterval(runSimulationLoop, 2000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [retentionDays]);
 
   return (
     <div
@@ -138,7 +162,7 @@ export default function DatabaseGrid() {
           left: '12px',
           fontFamily: 'var(--font-mono)',
           fontSize: '11px',
-          color: 'var(--accent-blue)',
+          color: 'var(--accent-cyan)',
           zIndex: 6
         }}
       >
@@ -187,9 +211,9 @@ export default function DatabaseGrid() {
             borderColor = 'var(--accent-orange)';
             boxShadow = '0 0 8px var(--accent-orange-glow)';
           } else if (state === 'indexed') {
-            backgroundColor = 'rgba(0, 255, 102, 0.25)';
-            borderColor = 'var(--accent-green)';
-            boxShadow = 'inset 0 0 2px var(--accent-green-glow)';
+            backgroundColor = 'rgba(0, 240, 255, 0.15)';
+            borderColor = 'rgba(0, 240, 255, 0.4)';
+            boxShadow = 'inset 0 0 2px var(--accent-cyan-glow)';
           } else if (state === 'pruned') {
             backgroundColor = 'rgba(239, 68, 68, 0.4)';
             borderColor = '#ef4444';
@@ -205,7 +229,8 @@ export default function DatabaseGrid() {
                 boxShadow,
                 transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 width: '100%',
-                height: '100%'
+                height: '100%',
+                borderRadius: '2px'
               }}
             />
           );

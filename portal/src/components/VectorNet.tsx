@@ -16,65 +16,26 @@ export default function VectorNet() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Grid details
-    const spacing = 60; // Space between points
+    // Drifting points grid
+    const spacing = 80; // Grid density
     const points: Array<{
       x: number;
       y: number;
-      ox: number; // Original x
-      oy: number; // Original y
-      vx: number; // Velocity x
-      vy: number; // Velocity y
+      ox: number; // Anchor x
+      oy: number; // Anchor y
+      phaseX: number; // Unique trigonometric phase
+      phaseY: number;
+      speed: number;
     }> = [];
 
-    // Initialize points grid
-    const cols = Math.ceil(width / spacing) + 1;
-    const rows = Math.ceil(height / spacing) + 1;
-
-    for (let c = 0; c < cols; c++) {
-      for (let r = 0; r < rows; r++) {
-        const px = c * spacing;
-        const py = r * spacing;
-        points.push({
-          x: px,
-          y: py,
-          ox: px,
-          oy: py,
-          vx: 0,
-          vy: 0,
-        });
-      }
-    }
-
-    // Mouse coordinates tracker
-    const mouse = {
-      x: -9999,
-      y: -9999,
-      active: false,
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      mouse.active = true;
-    };
-
-    const handleMouseLeave = () => {
-      mouse.x = -9999;
-      mouse.y = -9999;
-      mouse.active = false;
-    };
-
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      
-      // Reinitialize points list to match size
+    // Initialize grid of points
+    const initGrid = () => {
       points.length = 0;
-      const newCols = Math.ceil(width / spacing) + 1;
-      const newRows = Math.ceil(height / spacing) + 1;
-      for (let c = 0; c < newCols; c++) {
-        for (let r = 0; r < newRows; r++) {
+      const cols = Math.ceil(width / spacing) + 2;
+      const rows = Math.ceil(height / spacing) + 2;
+
+      for (let c = -1; c < cols; c++) {
+        for (let r = -1; r < rows; r++) {
           const px = c * spacing;
           const py = r * spacing;
           points.push({
@@ -82,106 +43,154 @@ export default function VectorNet() {
             y: py,
             ox: px,
             oy: py,
-            vx: 0,
-            vy: 0,
+            phaseX: Math.random() * Math.PI * 2,
+            phaseY: Math.random() * Math.PI * 2,
+            speed: 0.002 + Math.random() * 0.003
           });
         }
       }
+    };
+
+    initGrid();
+
+    // Mouse tracker
+    const mouse = {
+      x: -9999,
+      y: -9999,
+      tx: -9999, // Target x
+      ty: -9999, // Target y
+      active: false
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.tx = e.clientX;
+      mouse.ty = e.clientY;
+      mouse.active = true;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.tx = -9999;
+      mouse.ty = -9999;
+      mouse.active = false;
+    };
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initGrid();
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('resize', handleResize);
 
-    const pullRadius = 130;
-    const springTension = 0.03;
-    const friction = 0.88;
+    let time = 0;
+    const maxDistance = 75; // Connect lines within this distance
 
-    // Render loop
     const render = () => {
+      time += 1;
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Update points physics
+      // Smooth mouse interpolation
+      if (mouse.active) {
+        if (mouse.x === -9999) {
+          mouse.x = mouse.tx;
+          mouse.y = mouse.ty;
+        } else {
+          mouse.x += (mouse.tx - mouse.x) * 0.1;
+          mouse.y += (mouse.ty - mouse.y) * 0.1;
+        }
+      } else {
+        mouse.x = -9999;
+        mouse.y = -9999;
+      }
+
+      // 1. Update points positioning with waves + mouse repulsion
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
         
+        // Drifting wave motion
+        p.phaseX += p.speed;
+        p.phaseY += p.speed;
+        const driftX = Math.sin(p.phaseX) * 12;
+        const driftY = Math.cos(p.phaseY) * 12;
+
+        let targetX = p.ox + driftX;
+        let targetY = p.oy + driftY;
+
+        // Apply mouse lens distortion (push away slightly to look 3D)
         if (mouse.active) {
-          const dx = mouse.x - p.x;
-          const dy = mouse.y - p.y;
+          const dx = targetX - mouse.x;
+          const dy = targetY - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const forceRadius = 180;
+
+          if (dist < forceRadius) {
+            const force = (forceRadius - dist) / forceRadius;
+            // Push points outward from mouse coordinates
+            targetX += (dx / dist) * force * 35;
+            targetY += (dy / dist) * force * 35;
+          }
+        }
+
+        p.x = targetX;
+        p.y = targetY;
+      }
+
+      // 2. Draw connections and constellation lines
+      ctx.lineWidth = 0.8;
+      
+      for (let i = 0; i < points.length; i++) {
+        const p1 = points[i];
+        
+        // Scan surrounding points to build network lines
+        for (let j = i + 1; j < points.length; j++) {
+          const p2 = points[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < pullRadius) {
-            // Apply magnetic gravity vector towards mouse
-            const force = (pullRadius - dist) / pullRadius;
-            p.vx += (dx / dist) * force * 1.5;
-            p.vy += (dy / dist) * force * 1.5;
-          }
-        }
+          if (dist < maxDistance) {
+            // Draw connection line with opacity based on distance
+            const alpha = (1 - dist / maxDistance) * 0.05;
+            ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
 
-        // Spring force returning home
-        const homedx = p.ox - p.x;
-        const homedy = p.oy - p.y;
-        p.vx += homedx * springTension;
-        p.vy += homedy * springTension;
-
-        // Apply friction & update position
-        p.vx *= friction;
-        p.vy *= friction;
-        p.x += p.vx;
-        p.y += p.vy;
-      }
-
-      // 2. Draw Vector Net Lines
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-      
-      const colsCount = Math.ceil(width / spacing) + 1;
-      const rowsCount = Math.ceil(height / spacing) + 1;
-
-      for (let c = 0; c < colsCount; c++) {
-        for (let r = 0; r < rowsCount; r++) {
-          const idx = c * rowsCount + r;
-          const p1 = points[idx];
-          if (!p1) continue;
-
-          // Connect to right neighbor
-          if (c < colsCount - 1) {
-            const pRight = points[(c + 1) * rowsCount + r];
-            if (pRight) {
+            // Occasionally draw a traveling light packet along the connection path
+            if ((time + i + j) % 650 === 0) {
+              const pulsePos = (time % 100) / 100;
+              const px = p1.x + (p2.x - p1.x) * pulsePos;
+              const py = p1.y + (p2.y - p1.y) * pulsePos;
+              
               ctx.beginPath();
-              ctx.moveTo(p1.x, p1.y);
-              ctx.lineTo(pRight.x, pRight.y);
-              ctx.stroke();
-            }
-          }
-
-          // Connect to bottom neighbor
-          if (r < rowsCount - 1) {
-            const pBottom = points[c * rowsCount + r + 1];
-            if (pBottom) {
-              ctx.beginPath();
-              ctx.moveTo(p1.x, p1.y);
-              ctx.lineTo(pBottom.x, pBottom.y);
-              ctx.stroke();
+              ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+              ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+              ctx.fill();
             }
           }
         }
       }
 
-      // 3. Draw Nodes (highly transparent amber or green dots when close to mouse)
+      // 3. Draw active nodes
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        const dx = p.x - p.ox;
-        const dy = p.y - p.oy;
-        const displacement = Math.sqrt(dx * dx + dy * dy);
+        
+        // Only draw node points if they are close to mouse interaction radius
+        if (mouse.active) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (displacement > 0.5) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
-          // Highlight nodes with amber/orange glow if they are actively displaced by mouse
-          const opacity = Math.min(displacement / 10, 0.35);
-          ctx.fillStyle = `rgba(255, 69, 0, ${opacity})`;
-          ctx.fill();
+          if (dist < 140) {
+            const glowOpacity = (1 - dist / 140) * 0.25;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 240, 255, ${glowOpacity})`;
+            ctx.fill();
+          }
         }
       }
 

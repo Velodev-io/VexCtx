@@ -14,7 +14,7 @@ interface Particle {
   color: string;
 }
 
-export default function IngestionFlow() {
+export default function IngestionFlow({ retentionDays = 30 }: { retentionDays?: string | number }) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [pulseShield, setPulseShield] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -187,7 +187,7 @@ export default function IngestionFlow() {
           zIndex: 5
         }}
       >
-        ACTIVE BRIDGES: 3 | RETENTION: 30D
+        ACTIVE BRIDGES: 3 | RETENTION: {retentionDays === 'Permanent' || retentionDays === 0 || retentionDays === -1 || retentionDays === 'Permanent' ? 'PERM' : `${retentionDays}D`}
       </div>
 
       {/* Content wrapper */}

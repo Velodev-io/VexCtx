@@ -13,10 +13,67 @@ const DatabaseGrid = dynamic(() => import('../components/DatabaseGrid'), { ssr: 
 
 export default function Home() {
   const [osInfo, setOsInfo] = useState<OSInfo | null>(null);
+  const [retentionDays, setRetentionDays] = useState<number | 'Permanent'>(30);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeRecipe, setActiveRecipe] = useState<'curl' | 'python' | 'node'>('curl');
 
   useEffect(() => {
     detectOS().then((info) => setOsInfo(info));
   }, []);
+
+  const toggleFaq = (index: number) => {
+    setActiveFaq(activeFaq === index ? null : index);
+  };
+
+  const faqData = [
+    {
+      q: 'Where is my work context stored?',
+      a: 'All data resides 100% on your local machine. VexCTX boots an offline server daemon that writes events into a locally encrypted SQLite database and vector embeddings into a local Qdrant memory instance. We run zero collection servers and have no access to your data.'
+    },
+    {
+      q: 'Does it capture passwords, keys, or credit cards?',
+      a: 'No. VexCTX passes all inputs through a client-side privacy blacklist filter before writing anything to disk. It automatically identifies and discards credit card configurations, private keys, authorization tokens, and all inputs originating from security-sensitive or password manager applications.'
+    },
+    {
+      q: 'How does the browser extension connect securely?',
+      a: 'The extension streams conversations to your local daemon at http://localhost:8765/ext/events. To prevent unauthorized websites from accessing your local vault, the extension pairs with the daemon using a unique security token generated and saved in ~/.vexctx/ext_token.txt.'
+    }
+  ];
+
+  const recipes = {
+    curl: `curl -X POST http://localhost:8765/events \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "event_type": "ai_prompt",
+    "source_app": "vscode",
+    "content": "How do I fix a Redis timeout in FastAPI?",
+    "session_id": "dev_session_1",
+    "user_id": "default",
+    "project_id": "VexCTX"
+  }'`,
+    python: `from vexctx import VexCTXClient
+
+client = VexCTXClient(token="YOUR_PAIRED_TOKEN")
+
+client.capture_event(
+    event_type="ai_prompt",
+    source_app="vscode",
+    content="How do I fix a Redis timeout in FastAPI?",
+    session_id="dev_session_1",
+    project_id="VexCTX"
+)`,
+    node: `const { VexCTX } = require('vexctx');
+
+const vex = new VexCTX({ token: 'YOUR_PAIRED_TOKEN' });
+
+await vex.capture({
+  eventType: 'ai_prompt',
+  sourceApp: 'vscode',
+  content: 'How do I fix a Redis timeout in FastAPI?',
+  sessionId: 'dev_session_1',
+  projectId: 'VexCTX'
+});`
+  };
 
   return (
     <div
@@ -170,7 +227,7 @@ export default function Home() {
         </div>
 
         {/* Right Column: Ingestion particle flow */}
-        <IngestionFlow />
+        <IngestionFlow retentionDays={retentionDays} />
       </section>
 
       {/* TECHNICAL SCHEMA MATRIX: Problem vs Solution */}
@@ -212,15 +269,37 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Card 3: Auto-Pruning */}
+          {/* Card 3: Interactive Auto-Pruning */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderLeft: '1px solid var(--border-muted)', paddingLeft: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="led led-orange" />
-              <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>30-Day Storage Compaction</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary)' }}>Custom Data Retention</h3>
             </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Automated offline database maintenance prunes expired records and vectors on startup, optimizing your disk space parameters.
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '8px' }}>
+              You control how long your history is kept. Set the retention window to automatically optimize local storage capacity.
             </p>
+            {/* Pill Selector for Custom Retention */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {([7, 30, 90, 'Permanent'] as const).map((days) => (
+                <button
+                  key={days}
+                  onClick={() => setRetentionDays(days)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-muted)',
+                    backgroundColor: retentionDays === days ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
+                    borderColor: retentionDays === days ? 'var(--accent-cyan)' : 'var(--border-muted)',
+                    color: retentionDays === days ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                    textTransform: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  {typeof days === 'number' ? `${days} Days` : days}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -232,7 +311,141 @@ export default function Home() {
         </h2>
         <div className="grid-container" style={{ gap: '32px' }}>
           <SearchSimulator />
-          <DatabaseGrid />
+          <DatabaseGrid retentionDays={retentionDays} />
+        </div>
+      </section>
+
+      {/* RECIPE API MODULE: Code snippets */}
+      <section
+        className="deck-panel"
+        style={{
+          padding: '36px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          marginTop: '10px',
+          backgroundColor: 'rgba(8, 12, 24, 0.35)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '12px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', letterSpacing: '-0.5px' }}>
+            Ingest API Integration
+          </h2>
+          
+          {/* Recipe toggle tabs */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {(['curl', 'python', 'node'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setActiveRecipe(lang)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-muted)',
+                  backgroundColor: activeRecipe === lang ? 'rgba(0, 240, 255, 0.08)' : 'transparent',
+                  borderColor: activeRecipe === lang ? 'var(--accent-cyan)' : 'var(--border-muted)',
+                  color: activeRecipe === lang ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  fontWeight: 600
+                }}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+          Send custom prompt transactions, command histories, and file diffs directly to your local VexCTX daemon via simple REST API endpoints.
+        </p>
+
+        {/* Code display terminal block */}
+        <div
+          className="crt-monitor"
+          style={{
+            padding: '20px',
+            backgroundColor: '#05070a',
+            border: '1px solid var(--border-muted)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            lineHeight: '1.5',
+            color: 'var(--text-primary)',
+            overflowX: 'auto',
+            whiteSpace: 'pre'
+          }}
+        >
+          {recipes[activeRecipe]}
+        </div>
+      </section>
+
+      {/* FAQ MODULE: Accordion */}
+      <section style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', letterSpacing: '-0.5px' }}>
+          Frequently Asked Questions
+        </h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {faqData.map((faq, idx) => (
+            <div
+              key={idx}
+              className="deck-panel"
+              style={{
+                border: '1px solid var(--border-muted)',
+                backgroundColor: 'rgba(8, 12, 24, 0.25)',
+                borderRadius: '12px',
+                transition: 'all 0.2s ease',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Question Header */}
+              <button
+                onClick={() => toggleFaq(idx)}
+                style={{
+                  width: '100%',
+                  padding: '20px 24px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: 'transparent',
+                  border: 'none',
+                  textAlign: 'left',
+                  textTransform: 'none',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: activeFaq === idx ? 'var(--accent-cyan)' : 'var(--text-primary)'
+                }}
+              >
+                <span>{faq.q}</span>
+                <span
+                  style={{
+                    transform: activeFaq === idx ? 'rotate(45deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    fontSize: '18px',
+                    lineHeight: 1,
+                    color: 'var(--text-muted)'
+                  }}
+                >
+                  +
+                </span>
+              </button>
+
+              {/* Answer Content */}
+              <div
+                style={{
+                  maxHeight: activeFaq === idx ? '200px' : '0px',
+                  opacity: activeFaq === idx ? 1 : 0,
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  padding: activeFaq === idx ? '0 24px 24px 24px' : '0 24px',
+                  fontSize: '14px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: '1.6'
+                }}
+              >
+                {faq.a}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
