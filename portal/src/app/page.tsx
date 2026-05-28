@@ -91,37 +91,6 @@ await vex.capture({
       {/* Background spring vector network */}
       <VectorNet />
 
-      {/* Header Deck Panel */}
-      <header
-        style={{
-          borderBottom: '1px solid var(--border-muted)',
-          paddingBottom: '24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontFamily: 'var(--font-sans)',
-          fontWeight: 500
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontWeight: 'bold', color: 'var(--accent-cyan)', fontSize: '18px', letterSpacing: '-0.5px' }}>VexCTX</span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', border: '1px solid var(--border-muted)', padding: '2px 6px', borderRadius: '4px' }}>v1.0.6</span>
-        </div>
-        <nav style={{ display: 'flex', gap: '24px' }}>
-          <Link href="/changelog" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }} className="glitch-text">
-            Changelog
-          </Link>
-          <a
-            href="https://github.com/Velodev-io/VexCtx"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }}
-            className="glitch-text"
-          >
-            GitHub
-          </a>
-        </nav>
-      </header>
 
       {/* HERO SECTION: System Initialization */}
       <section className="grid-container" style={{ alignItems: 'center', gap: '48px', marginTop: '10px' }}>

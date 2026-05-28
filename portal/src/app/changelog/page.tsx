@@ -91,28 +91,6 @@ export default async function ChangelogPage() {
       {/* Background vector net */}
       <VectorNet />
 
-      {/* Header Bar */}
-      <header
-        style={{
-          borderBottom: '1px solid var(--border-muted)',
-          paddingBottom: '24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontFamily: 'var(--font-sans)',
-          fontWeight: 500
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link href="/" style={{ fontWeight: 'bold', color: 'var(--accent-cyan)', textDecoration: 'none', fontSize: '18px', letterSpacing: '-0.5px' }}>
-            VexCTX
-          </Link>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', border: '1px solid var(--border-muted)', padding: '2px 6px', borderRadius: '4px' }}>/changelog</span>
-        </div>
-        <Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }} className="glitch-text">
-          Back
-        </Link>
-      </header>
 
       {/* Page Title */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
