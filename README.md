@@ -55,25 +55,6 @@ VexCTX is built on one principle: **your data is yours, and only yours.**
 
 ---
 
-## Free vs paid
-
-### Free: VexCTX Vault
-*   **AI Activity Capture**: Prompts, responses, file edits, commands, and artifacts — captured as you work.
-*   **Transparent Encryption**: AES-256-GCM encryption, fully managed by the app. No setup required.
-*   **Local Storage**: Everything stored in an encrypted vault file on your machine.
-*   **Full Export**: Download your complete encrypted history as a JSON file at any time.
-*   **Timeline View**: Browse a chronological history of your AI work inside the app.
-
-### Pro: VexCTX Retrieve
-*   **Semantic Search**: Find any moment in your AI work history using natural language queries — all on-device.
-*   **Chunk-Level Retrieval**: Group and filter history by session, task, project, or date range.
-*   **LLM Summaries**: Ask "What did I work on last week?" and get a synthesized summary — powered by your local LLM.
-*   **Agent-Ready Bundles**: Package selected history into a structured, prompt-injectable context block — ready to paste into Claude, ChatGPT, Cursor, or any AI tool.
-*   **Filtered Exports**: Export only the history you need — filtered by project, date, or app — as JSON or Markdown.
-
-> All Pro retrieval features run **entirely on your device**. Your data is never sent to our servers to process these requests.
-
----
 
 ## Quick start
 
@@ -247,56 +228,6 @@ VexCTX is a fully local service. Every component runs on your machine:
 
 ---
 
-## Roadmap
-
-See the full phased roadmap in [ROADMAP.md](./ROADMAP.md). Summary:
-
-### ✅ Phase 1 — Core Context Engine (Complete)
-- [x] Encrypted vault segment creation (AES-256-GCM, app-managed)
-- [x] Full portable export/import (JSON)
-- [x] Hybrid FTS + Vector RRF search (on-device)
-- [x] Client SDKs (Python and Node/TypeScript)
-- [x] Plan gate checks (HTTP 402 with structured payload)
-
-### ✅ Phase 2 — Browser Extension (Complete)
-- [x] Chrome and Firefox Manifest V3 extensions (Claude.ai, ChatGPT, Gemini, Perplexity)
-- [x] Local daemon bridge — captured data goes to local vault, nowhere else
-- [x] Domain-level enable/disable controls
-- [x] Firefox, Chrome, and Arc support
-- [x] Chrome Web Store and Firefox Add-ons packages prepared
-
-### ✅ Phase 3 — Lightweight Web Portal (vexctx.io) (Complete)
-- [x] Account creation and authentication
-- [x] Plan & subscription management (Free / Pro manual toggle)
-- [x] License key delivery to the local app (Stateless signed JWTs)
-- [x] Documentation and support hub
-> Note: The portal manages accounts and licenses only. No user vault data is ever sent to or stored on the portal.
-
-### ✅ Phase 4 — Native App (.dmg / .exe) (Complete)
-- [x] Tauri shell with bundled Python daemon
-- [x] macOS menu bar agent & Windows system tray
-- [x] In-app vault browser, timeline, and export
-- [x] Auto-updater via GitHub Releases
-- [ ] Onboarding wizard with privacy consent flow
-- [ ] Code signing & notarization (macOS + Windows)
-- [ ] macOS Intel (x86_64) build
-
-### 🔲 Phase 5 — Package Manager Distribution
-- [ ] PyPI package (`pipx install vexctx`)
-- [ ] Homebrew formula (`brew install vexctx`)
-- [ ] Winget manifest
-- [ ] Universal curl installer (`curl -fsSL vexctx.io/install | bash`)
-
-### 🔲 Phase 6 — Enterprise & Team
-- [ ] Shared local network vaults (within a team's private infrastructure)
-- [ ] Audit trail logging (local only)
-- [ ] SSO license verification
-
-### 🔲 Phase 7 — Vexon OS Native Integration
-- [ ] OS-level event hooks (no browser extension needed)
-- [ ] Proactive agents querying VexCTX local retrieve APIs before executing tasks
-
----
 
 ## License
 

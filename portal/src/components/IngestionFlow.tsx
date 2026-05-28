@@ -43,7 +43,7 @@ export default function IngestionFlow({ retentionDays = 30 }: { retentionDays?: 
         progress: 0,
         speed: 0.007 + Math.random() * 0.008,
         size: 2 + Math.random() * 3,
-        color: '#00ff66' // Phosphor Green events
+        color: source.color
       };
 
       setParticles((prev) => [...prev, newParticle]);
@@ -151,7 +151,7 @@ export default function IngestionFlow({ retentionDays = 30 }: { retentionDays?: 
             r={p.size}
             fill={p.color}
             style={{
-              filter: 'drop-shadow(0 0 4px #00ff66)',
+              filter: `drop-shadow(0 0 4px ${p.color})`,
               opacity: p.progress < 0.1 ? p.progress * 10 : p.progress > 0.9 ? (1 - p.progress) * 10 : 1
             }}
           />
@@ -244,7 +244,7 @@ export default function IngestionFlow({ retentionDays = 30 }: { retentionDays?: 
             height: '70px',
             border: `1.5px solid ${pulseShield ? 'var(--accent-green)' : 'var(--border-muted)'}`,
             boxShadow: pulseShield ? '0 0 15px var(--accent-green-glow)' : 'none',
-            backgroundColor: 'rgba(0, 255, 102, 0.02)',
+            backgroundColor: 'var(--accent-green-glow)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

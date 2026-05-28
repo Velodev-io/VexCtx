@@ -153,7 +153,7 @@ export default function VectorNet() {
           if (dist < maxDistance) {
             // Draw connection line with opacity based on distance
             const alpha = (1 - dist / maxDistance) * 0.05;
-            ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+            ctx.strokeStyle = `rgba(223, 159, 40, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
@@ -167,7 +167,7 @@ export default function VectorNet() {
               
               ctx.beginPath();
               ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-              ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+              ctx.fillStyle = 'rgba(223, 159, 40, 0.4)';
               ctx.fill();
             }
           }
@@ -188,7 +188,7 @@ export default function VectorNet() {
             const glowOpacity = (1 - dist / 140) * 0.25;
             ctx.beginPath();
             ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 240, 255, ${glowOpacity})`;
+            ctx.fillStyle = `rgba(223, 159, 40, ${glowOpacity})`;
             ctx.fill();
           }
         }

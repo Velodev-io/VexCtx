@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Header from "../components/Header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,44 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <header
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '20px 40px',
-            borderBottom: '1px solid var(--border-muted)',
-            backgroundColor: 'rgba(6, 8, 14, 0.4)',
-            backdropFilter: 'blur(16px)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
-            fontFamily: 'var(--font-sans)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontWeight: 'bold', color: 'var(--accent-cyan)', fontSize: '18px', letterSpacing: '-0.5px' }}>VexCTX</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', border: '1px solid var(--border-muted)', padding: '2px 6px', borderRadius: '4px' }}>v1.0.6</span>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '24px' }}>
-            <Link href="/" style={{ fontSize: '14px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }} className="glitch-text">
-              Home
-            </Link>
-            <Link href="/changelog" style={{ fontSize: '14px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }} className="glitch-text">
-              Changelog
-            </Link>
-            <a
-              href="https://github.com/Velodev-io/VexCtx"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: '14px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}
-              className="glitch-text"
-            >
-              GitHub
-            </a>
-          </div>
-        </header>
+      <body className="noise">
+        <Header />
         
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {children}

@@ -211,8 +211,8 @@ export default function DatabaseGrid({ retentionDays = 30 }: { retentionDays?: s
             borderColor = 'var(--accent-orange)';
             boxShadow = '0 0 8px var(--accent-orange-glow)';
           } else if (state === 'indexed') {
-            backgroundColor = 'rgba(0, 240, 255, 0.15)';
-            borderColor = 'rgba(0, 240, 255, 0.4)';
+            backgroundColor = 'rgba(223, 159, 40, 0.15)';
+            borderColor = 'rgba(223, 159, 40, 0.4)';
             boxShadow = 'inset 0 0 2px var(--accent-cyan-glow)';
           } else if (state === 'pruned') {
             backgroundColor = 'rgba(239, 68, 68, 0.4)';
