@@ -61,7 +61,23 @@ async function fetchReleases(): Promise<GitHubRelease[]> {
 }
 
 export default async function ChangelogPage() {
-  const releases = await fetchReleases();
+  const allReleases = await fetchReleases();
+  
+  // Filter out any releases before v1.0.6 to only display updates from v1.0.6 onwards
+  const releases = allReleases.filter((r) => {
+    const versionMatch = r.tag_name.match(/v(\d+)\.(\d+)\.(\d+)/);
+    if (versionMatch) {
+      const major = parseInt(versionMatch[1]);
+      const minor = parseInt(versionMatch[2]);
+      const patch = parseInt(versionMatch[3]);
+      if (major > 1) return true;
+      if (major === 1) {
+        if (minor > 0) return true;
+        if (minor === 0 && patch >= 6) return true;
+      }
+    }
+    return false;
+  });
 
   const formatSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -191,40 +207,52 @@ export default async function ChangelogPage() {
                   [BUILT_BINARY_ASSETS]
                 </div>
                 
-                {release.assets.length > 0 ? (
-                  release.assets.map((asset) => (
-                    <a
-                      key={asset.name}
-                      href={asset.browser_download_url}
-                      className="deck-panel"
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '14px 18px',
-                        textDecoration: 'none',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        fontFamily: 'var(--font-mono)',
-                        border: '1px solid rgba(255, 255, 255, 0.04)',
-                        backgroundColor: 'rgba(255,255,255,0.01)',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      <span style={{ color: 'var(--text-primary)' }} className="glitch-text">
-                        {asset.name}
-                      </span>
-                      <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '11px' }}>
-                        <span>SIZE: {formatSize(asset.size)}</span>
-                        <span>DOWNLOADS: {asset.download_count}</span>
-                      </div>
-                    </a>
-                  ))
-                ) : (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    No manual binaries compiled. Source available on GitHub.
-                  </div>
-                )}
+                {(() => {
+                  const userFacingAssets = release.assets.filter((asset) => {
+                    const name = asset.name.toLowerCase();
+                    return (
+                      (name.endsWith('.dmg') ||
+                        name.endsWith('.exe') ||
+                        name.endsWith('.appimage')) &&
+                      !name.endsWith('.sig')
+                    );
+                  });
+                  
+                  return userFacingAssets.length > 0 ? (
+                    userFacingAssets.map((asset) => (
+                      <a
+                        key={asset.name}
+                        href={asset.browser_download_url}
+                        className="deck-panel"
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '14px 18px',
+                          textDecoration: 'none',
+                          color: 'var(--text-primary)',
+                          fontSize: '13px',
+                          fontFamily: 'var(--font-mono)',
+                          border: '1px solid rgba(255, 255, 255, 0.04)',
+                          backgroundColor: 'rgba(255,255,255,0.01)',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        <span style={{ color: 'var(--text-primary)' }} className="glitch-text">
+                          {asset.name}
+                        </span>
+                        <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '11px' }}>
+                          <span>SIZE: {formatSize(asset.size)}</span>
+                          <span>DOWNLOADS: {asset.download_count}</span>
+                        </div>
+                      </a>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      No manual binaries compiled. Source available on GitHub.
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
