@@ -36,7 +36,7 @@ VexCTX solves this by giving you a **private, encrypted, local memory vault** th
 3. **It encrypts automatically** — Every event is encrypted the moment it's captured. The app manages this transparently. You never touch a key.
 4. **It stores locally** — Everything lives in an encrypted vault file on your machine. Nothing is sent anywhere.
 5. **You access it through the app** — The VexCTX app is the only way to open and read your vault. Export your full history as JSON at any time.
-6. **Retrieve on demand** — Paid users unlock on-device semantic search, summaries, and agent-ready context bundles — processed entirely on your machine.
+6. **Retrieve on demand** — Search and review your complete timeline history directly within the local dashboard app.
 
 ---
 
@@ -60,7 +60,6 @@ VexCTX is built on one principle: **your data is yours, and only yours.**
 
 ### Requirements
 *   Python 3.12+
-*   Ollama (for local LLM summarization and embeddings)
 *   uv (Python package manager)
 
 ### Install
@@ -79,13 +78,6 @@ git clone https://github.com/Velodev-io/VexCtx.git
 cd VexCtx
 uv sync
 cp .env.example .env
-```
-
-### Start local dependencies
-
-```bash
-ollama pull nomic-embed-text
-ollama pull llama3.2:3b
 ```
 
 ### Run the API
@@ -121,38 +113,17 @@ VexCTX includes a lightweight browser extension that automatically captures your
 
 ---
 
-## License Key & Data Retention Setup
+## Data Retention & Pruning
 
-### Stateless JWT License Key Activation
-To unlock VexCTX Retrieve (Pro) on-device capabilities, you can generate a signed JWT license key from the Web Portal. 
-Activate the key in your local daemon by sending a POST request:
-
-```bash
-curl -X POST http://localhost:8765/license/activate \
-  -H "Content-Type: application/json" \
-  -d '{"license_key": "YOUR_SIGNED_JWT_HERE"}'
-```
-
-To deactivate the license key:
-```bash
-curl -X POST http://localhost:8765/license/deactivate
-```
-
-Check the active license status:
-```bash
-curl http://localhost:8765/license/status
-```
-
-### 30-Day Storage Optimization & Pruning
-VexCTX includes automatic data pruning to prevent high disk usage. By default, events older than 30 days are automatically deleted from SQLite, and their corresponding vector embeddings are purged from Qdrant, followed by a database compaction.
+VexCTX includes automatic local data pruning to prevent high disk usage. By default, events older than 30 days are automatically deleted from SQLite, followed by a database compaction.
 * Configure this via `VEXCTX_RETENTION_DAYS` in your `.env` (e.g. set to `60` for 60 days, or `0`/`-1` to keep all data permanently).
-* Pruning runs asynchronously as a background task on daemon startup.
+* Pruning runs locally and asynchronously as a background task on daemon startup.
 
 ---
 
 ## Example API usage
 
-### 1. Ingest an Event (Free)
+### 1. Ingest an Event
 
 ```bash
 curl -X POST http://localhost:8765/events \
@@ -168,22 +139,10 @@ curl -X POST http://localhost:8765/events \
   }'
 ```
 
-### 2. Export Your Vault (Free)
+### 2. Export Your Vault
 
 ```bash
 curl -X POST "http://localhost:8765/vault/export?vault_id=default_vault"
-```
-
-### 3. Retrieve Context Bundle (Pro — Returns HTTP 402 on Free tier)
-
-```bash
-curl -X POST http://localhost:8765/retrieve/agent-bundle \
-  -H "Content-Type: application/json" \
-  -d '{
-    "project_id": "VexCTX",
-    "query": "Redis timeout configuration",
-    "chunk_type": "session"
-  }'
 ```
 
 ---
@@ -194,37 +153,18 @@ VexCTX is a fully local service. Every component runs on your machine:
 
 ```
 +-------------------------------------------------------------+
-|                       VexCTX Vault (Free)                   |
-|  Local-First, Encrypted Capture & Timeline                  |
+|                           VexCTX                            |
+|           Local-First, Encrypted Memory Vault               |
 |                                                             |
 |  [Capture API] --> [Privacy Filter] --> [Active Segment]    |
 |                                               |             |
-|  [Timeline View] <-- [SQLite Metadata] <------+             |
+|  [Timeline View] <-- [SQLite + FTS5]  <-------+             |
 |  [JSON Export]  <-- [Encrypted Files (AES-256-GCM)]         |
-+-------------------------------------------------------------+
-                               |
-                               v (Pro tier — on-device only)
-+-------------------------------------------------------------+
-|                     VexCTX Retrieve (Pro)                   |
-|  On-Device Intelligence — Nothing Leaves Your Machine       |
-|                                                             |
-|  [Plan Guard] --> [Local Vault Decryption]                  |
-|                          |                                  |
-|                          v                                  |
-|  [Chunking Engine] --> [Vector Store & FTS5]                |
-|                          |                                  |
-|                          v                                  |
-|  [Hybrid Retrieval] --> [Rank Fusion (RRF)]                 |
-|                          |                                  |
-|                          v                                  |
-|  [Local LLM (Ollama)] --> [Summaries & Agent Bundles]       |
 +-------------------------------------------------------------+
 ```
 
-*   **SQLite + FTS5**: Stores event metadata and powers keyword search — all local.
-*   **Vector Engine (Qdrant)**: Semantic embeddings stored locally under `~/.vexctx/vectors/`. No external service.
-*   **Local LLM (Ollama)**: Summarization and context synthesis runs on your machine via Ollama.
-*   **Plan Guard**: Checks your local plan license. Blocks Pro endpoints on the Free tier with `402 Payment Required`.
+*   **SQLite + FTS5**: Stores event metadata and powers fast keyword search — all local.
+*   **Encrypted Storage**: Secure AES-256-GCM files saved directly on your local disk.
 
 ---
 
