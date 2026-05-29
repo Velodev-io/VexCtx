@@ -46,21 +46,32 @@ VexCTX is built on one principle: **your data is yours, and only yours.**
 
 ## Quick start
 
-### Requirements
+### Install via Homebrew (Recommended)
+
+To install VexCTX using the Homebrew package manager, run:
+
+```bash
+brew tap Velodev-io/tap
+brew install vexctx
+```
+
+Once installed, start the local daemon server:
+
+```bash
+vexctx --port 8765
+```
+
+---
+
+### Alternative Installation (Manual)
+
+If you do not use Homebrew, you can install from source:
+
+#### Requirements
 *   Python 3.12+
 *   uv (Python package manager)
 
-### Install
-
-Run the one-step installer from the project directory:
-
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-Or install manually:
-
+#### Setup
 ```bash
 git clone https://github.com/Velodev-io/VexCtx.git
 cd VexCtx
@@ -68,8 +79,7 @@ uv sync
 cp .env.example .env
 ```
 
-### Run the API
-
+#### Run the API
 ```bash
 uv run uvicorn vexctx.main:app --port 8765 --reload
 ```

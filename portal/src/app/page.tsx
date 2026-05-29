@@ -14,7 +14,7 @@ export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeRecipe, setActiveRecipe] = useState<'curl' | 'python' | 'node'>('curl');
   const [copied, setCopied] = useState(false);
-  const installCmd = "git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && ./install.sh";
+  const installCmd = "brew tap Velodev-io/tap && brew install vexctx";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(installCmd);
@@ -40,8 +40,8 @@ export default function Home() {
       a: 'The extension streams conversations to your local daemon at http://localhost:8765/ext/events. To prevent unauthorized websites from accessing your local vault, the extension pairs with the daemon using a unique security token generated and saved in ~/.vexctx/ext_token.txt.'
     },
     {
-      q: 'How do I run and install the VexCTX CLI environment?',
-      a: 'Requirements are Python 3.12+ and the uv package manager. Clone the repository and run the automated helper script: git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && ./install.sh. Once complete, boot the server: uv run uvicorn vexctx.main:app --port 8765.'
+      q: 'How do I install VexCTX using Homebrew?',
+      a: 'VexCTX is distributed via Homebrew. Simply tap the repository and install: brew tap Velodev-io/tap && brew install vexctx. Once the installation completes, you can start the local context daemon from any terminal window by running: vexctx --port 8765.'
     }
   ];
 
@@ -264,7 +264,7 @@ await vex.capture({
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b', opacity: 0.8 }} />
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981', opacity: 0.8 }} />
               </div>
-              <span>bash — local setup</span>
+              <span>bash — homebrew install</span>
               <span style={{ width: '42px' }}></span>
             </div>
 
