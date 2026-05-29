@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { detectOS, OSInfo } from '../utils/detectOS';
 
 // Client-only dynamic imports for canvas and animations to avoid SSR mismatch
 const VectorNet = dynamic(() => import('../components/VectorNet'), { ssr: false });
@@ -11,14 +10,17 @@ const IngestionFlow = dynamic(() => import('../components/IngestionFlow'), { ssr
 const DeveloperChat = dynamic(() => import('../components/DeveloperChat'), { ssr: false });
 
 export default function Home() {
-  const [osInfo, setOsInfo] = useState<OSInfo | null>(null);
   const [retentionDays, setRetentionDays] = useState<number | 'Permanent'>(30);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeRecipe, setActiveRecipe] = useState<'curl' | 'python' | 'node'>('curl');
+  const [copied, setCopied] = useState(false);
+  const installCmd = "git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && ./install.sh";
 
-  useEffect(() => {
-    detectOS().then((info) => setOsInfo(info));
-  }, []);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(installCmd);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
@@ -38,8 +40,8 @@ export default function Home() {
       a: 'The extension streams conversations to your local daemon at http://localhost:8765/ext/events. To prevent unauthorized websites from accessing your local vault, the extension pairs with the daemon using a unique security token generated and saved in ~/.vexctx/ext_token.txt.'
     },
     {
-      q: 'Why does macOS say VexCTX "is damaged and cannot be opened"?',
-      a: 'This is a standard macOS Gatekeeper security block for unsigned open-source apps. To run the app: drag VexCTX to your Applications folder, open Terminal, and run: xattr -cr /Applications/VexCTX.app. This will strip the quarantine attribute and allow it to open normally.'
+      q: 'How do I run and install the VexCTX CLI environment?',
+      a: 'Requirements are Python 3.12+ and the uv package manager. Clone the repository and run the automated helper script: git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && ./install.sh. Once complete, boot the server: uv run uvicorn vexctx.main:app --port 8765.'
     }
   ];
 
@@ -228,58 +230,104 @@ await vex.capture({
             VexCTX automatically logs your work events into a secure local database running 100% offline.
           </p>
 
-          {/* Central Bracket-Framed CTA */}
-          <div className="bracket-frame" style={{ width: 'fit-content', margin: '24px auto 0 auto' }}>
-            <span className="bracket-scob bracket-scob-left" style={{ borderColor: 'var(--accent-cyan)', borderWidth: '2.5px', top: 0, bottom: 0, opacity: 1 }} />
-            {osInfo ? (
-              <a href={osInfo.downloadUrl} className="btn btn-primary" style={{ padding: '14px 36px', fontSize: '15px' }}>
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                {osInfo.label}
-              </a>
-            ) : (
-              <button disabled style={{ padding: '14px 36px', fontSize: '15px', opacity: 0.5 }}>
-                Detecting Client Environment...
+          {/* Central Terminal CLI Copy Box */}
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '10px', 
+              width: '100%', 
+              maxWidth: '640px', 
+              margin: '24px auto 0 auto',
+              zIndex: 5
+            }}
+          >
+            {/* Terminal Window Header */}
+            <div 
+              style={{
+                backgroundColor: 'rgba(15, 20, 32, 0.75)',
+                border: '1px solid var(--border-muted)',
+                borderBottom: 'none',
+                borderRadius: '12px 12px 0 0',
+                padding: '10px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: 'var(--text-muted)'
+              }}
+            >
+              {/* Three dots mac buttons */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', opacity: 0.8 }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b', opacity: 0.8 }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981', opacity: 0.8 }} />
+              </div>
+              <span>bash — local setup</span>
+              <span style={{ width: '42px' }}></span>
+            </div>
+
+            {/* Terminal Body */}
+            <div 
+              className="crt-monitor"
+              style={{
+                backgroundColor: '#05070a',
+                border: '1px solid var(--border-muted)',
+                borderRadius: '0 0 12px 12px',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '13px',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ overflowX: 'auto', whiteSpace: 'nowrap', display: 'flex', gap: '8px', color: 'var(--accent-cyan)' }}>
+                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>$</span>
+                <span>{installCmd}</span>
+              </div>
+
+              {/* Copy button */}
+              <button
+                onClick={handleCopy}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-muted)',
+                  backgroundColor: copied ? 'var(--accent-green-glow)' : 'rgba(255, 255, 255, 0.02)',
+                  color: copied ? 'var(--accent-green)' : 'var(--text-secondary)',
+                  borderColor: copied ? 'var(--accent-green)' : 'var(--border-muted)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}
+              >
+                {copied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    Copy
+                  </>
+                )}
               </button>
-            )}
-            <span className="bracket-scob bracket-scob-right" style={{ borderColor: 'var(--accent-cyan)', borderWidth: '2.5px', top: 0, bottom: 0, opacity: 1 }} />
-          </div>
-
-          {/* Selector fallback list */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '16px',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              opacity: 0.5,
-              marginTop: '12px'
-            }}
-          >
-            <a href="https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_aarch64.dmg" style={{ color: 'var(--text-muted)', textDecoration: 'none' }} className="glitch-text">
-              [macOS arm64]
-            </a>
-            <a href="https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_x64-setup.exe" style={{ color: 'var(--text-muted)', textDecoration: 'none' }} className="glitch-text">
-              [Windows Setup]
-            </a>
-            <a href="https://github.com/Velodev-io/VexCtx/releases/download/v1.0.6/VexCTX_1.0.0_amd64.AppImage" style={{ color: 'var(--text-muted)', textDecoration: 'none' }} className="glitch-text">
-              [Linux AppImage]
-            </a>
-          </div>
-
-          {/* macOS Troubleshooting link */}
-          <div
-            style={{
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              opacity: 0.45,
-              marginTop: '4px',
-              color: 'var(--text-muted)'
-            }}
-          >
-            macOS user? If you see a "damaged app" error, see the FAQ troubleshooting section below.
+            </div>
           </div>
         </div>
       </section>

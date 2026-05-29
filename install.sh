@@ -64,32 +64,7 @@ else
     echo -e "${YELLOW}! .env file already exists, skipping copy.${NC}"
 fi
 
-# 5. Check for Ollama and Pull Models
-echo -e "\nChecking Ollama installation and running status..."
-if command -v ollama &>/dev/null; then
-    echo -e "${GREEN}✓ Found Ollama${NC}"
-    # Check if Ollama service is running
-    if curl -s http://localhost:11434/api/tags &>/dev/null; then
-        echo -e "${GREEN}✓ Ollama service is running.${NC}"
-        echo -e "${BLUE}Pulling embedding model (nomic-embed-text)...${NC}"
-        ollama pull nomic-embed-text
-        echo -e "${BLUE}Pulling LLM model (llama3.2:3b)...${NC}"
-        ollama pull llama3.2:3b
-        echo -e "${GREEN}✓ Models pulled successfully.${NC}"
-    else
-        echo -e "${YELLOW}! Ollama is installed but the service is NOT running.${NC}"
-        echo -e "${YELLOW}Please start the Ollama application, then run:${NC}"
-        echo -e "  ollama pull nomic-embed-text"
-        echo -e "  ollama pull llama3.2:3b"
-    fi
-else
-    echo -e "${YELLOW}! Ollama is not installed.${NC}"
-    echo -e "${YELLOW}Please install Ollama (https://ollama.com) and pull models:${NC}"
-    echo -e "  ollama pull nomic-embed-text"
-    echo -e "  ollama pull llama3.2:3b"
-fi
-
-# 6. Run verification tests
+# 5. Run verification tests
 echo -e "\nRunning test suite to verify setup..."
 if PYTHONPATH=. uv run pytest; then
     echo -e "${GREEN}✓ All verification tests passed successfully!${NC}"
