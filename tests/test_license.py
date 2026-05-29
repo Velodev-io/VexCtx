@@ -30,6 +30,34 @@ def cleanup_license():
     clear_cached_license()
     settings.VEXCTX_PLAN_TYPE = original_plan
 
+PRIVATE_KEY_PEM = """-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAm7wsnU1EC5AU89PgsKJi95TjQsvRgc7McIcrt3ktggnnjmwL
+Mzl34FbbZVmLsIjMb3uop66gIHqZ7a2EQYrEUM/Yu69YB+7L6TVa7EV3ydqzq9fm
+PCeEvnSXVxRNZQ+eoFzziKc6gFuIzwxEMK2cLlAvGlSKJPjCafdT5n1EAwyRehQJ
+meM97jSpuDBakbzM0eZImKiywy67NprrAVhx5vJ4r98/fZRutHp6UwN3gpORpJLH
+r9Qa3xZa89QQQQ1i0Z8wMgiQpQOGM5+Um9tqrfK4NMwOnQkmEiQLRa7KpD5PVFYS
+fAUenZKEoTnWsBZByz3zLbHKCKbkmxP9OoxkSQIDAQABAoIBAAU9+kp5NVcmTG5A
+rYmEjcxDqLqw3aZ+7YbEJgaQ/6Um7DJxFJdu0cgtZEkvEHKqyCbghLbQO/eb6N6F
+PrRuFVmbBXKb3ly1/wskjqDxXazfvbiFFezkb6Vxiz6VIl3Kfs5rEo+BAYkci6hc
+g1cYIO+2Jz+9pMDF1tV2S86wXL+1eRrrSGQYanCgmVn1eHOlhhZRTWqCqSrs60+F
+wbiPsxPZseo/vCUZfnlf1ZSKyjxD5rzUNSkEB72mIZVv7SIh8eituKZUxkVVFnlL
+6WXO31KoEYum2VgEI7fsIG5RQEjpWbtPwFZwFACDoA9swZZAUXMmjHyfbLdxpL+z
+NdTtRFkCgYEA2RH0CLY1YqKcM2t6yr4EDSYIYJalrqsXeK/0nKAacGGRgLZWWs9c
+lES7kfFazORly83UIG1+ZGoYC59w6tldMb8f2MFVFpsTCkYjD7zc6esXZeJb/4qK
+D6FkZOqNo7bbm3iPbqBiIuS2GB3zHgYCA0QUjuwmVNWAs5TZRr5ePs8CgYEAt6o6
+E/5GvqBr5whgzLz6scOcfJHmvOOgod2PphMX/ADDZ2LyN+fRyAASlT9/ftyYpuK0
+NdrqKk8tSC9PHqre1nut1p8vzzR8sQhdVnwXNLBcHEbJiCAEkpqLJ9AkVNzy/ZZw
+kuSj3FIWJhD9ufClkelWdcJeC0OWCeBnGOCMsWcCgYBEkZVCwzvt4mvxGjx5mrhw
+5tiymiPQHx+U8hAVAcYYRdnOjMqOeP5Hn8aYfWMvYd5+GJCvhabtVU4vLbhflzYH
+JtaKg9e7AlVrY2hj6kbmZWrItk5VVI/0DAlIj4cadgK9A8JbMbKOTyzuRVes3jz4
+hyLvWs1o8uBq2dQgsrXWpQKBgCgnVzs3xE+40t5XvpIEXuquUXAKld+GBIBe6CDu
+27eEkzPvNfVzATIwkd9/Wmhp4hXaSnvbuIY3eTbm4O1bfgx2TbM2akVqvDgYFA/s
+YUZrqDemYjkYhudmUjYKE2daRuWaFlKHGiv45k68ODyGmCwmT3i/XcAorozKOr/9
+l8TRAoGBAJfSZN76vTiPXe+LwnOTnd6ZqMf6WC5gt+EPBIudoay0Q1VTQz77kftM
+ZQYZz4lmw4Ub13E9j5vpk2GhlVmvTnL2DLDPIhuEj2/O5R0IIne3bnznmV8RNlMB
+GD8XuOQiVjnL6FEy0NCLZtqTfxQYGp7Yyk0nWcFYgEq9R3dJmtpv
+-----END RSA PRIVATE KEY-----"""
+
 def test_jwt_validation():
     # 1. Create a valid token
     payload = {
@@ -37,7 +65,7 @@ def test_jwt_validation():
         "plan": "pro",
         "exp": int((datetime.utcnow() + timedelta(days=1)).timestamp())
     }
-    token = jwt.encode(payload, settings.VEXCTX_JWT_SECRET, algorithm="HS256")
+    token = jwt.encode(payload, PRIVATE_KEY_PEM, algorithm="RS256")
     
     # 2. Verify validation succeeds
     decoded = verify_jwt_license(token)
@@ -50,13 +78,21 @@ def test_jwt_validation():
         "plan": "pro",
         "exp": int((datetime.utcnow() - timedelta(days=1)).timestamp())
     }
-    expired_token = jwt.encode(expired_payload, settings.VEXCTX_JWT_SECRET, algorithm="HS256")
+    expired_token = jwt.encode(expired_payload, PRIVATE_KEY_PEM, algorithm="RS256")
     
     with pytest.raises(ValueError, match="expired"):
         verify_jwt_license(expired_token)
 
-    # 4. Create token with wrong secret
-    wrong_token = jwt.encode(payload, "wrong-secret-key-12345", algorithm="HS256")
+    # 4. Create token with wrong secret / key
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import serialization
+    wrong_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    wrong_pem = wrong_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    wrong_token = jwt.encode(payload, wrong_pem, algorithm="RS256")
     with pytest.raises(ValueError, match="signature"):
         verify_jwt_license(wrong_token)
 
@@ -66,7 +102,7 @@ def test_license_endpoints():
         "plan": "pro",
         "exp": int((datetime.utcnow() + timedelta(days=10)).timestamp())
     }
-    token = jwt.encode(payload, settings.VEXCTX_JWT_SECRET, algorithm="HS256")
+    token = jwt.encode(payload, PRIVATE_KEY_PEM, algorithm="RS256")
 
     # 1. Activate valid license
     response = client.post("/license/activate", json={"license_key": token})

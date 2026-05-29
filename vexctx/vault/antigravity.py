@@ -527,18 +527,27 @@ class AntigravitySync:
         # 3. VS Code Copilot workspace chatSession logs
         await self.sync_vscode_copilot()
 
+        # 4. Zsh command history logs
+        await self.sync_zsh_history()
+
+        # 5. Frontmost active window focus transitions
+        await self.sync_active_window()
+
     async def start_loop(self):
         print("Antigravity chat sync loop starting...")
         # Give daemon server some seconds to fully start up first
         await asyncio.sleep(5)
         
-        # Clean up any existing terminal command or active window logs to respect user preference
+        # Clean up any existing terminal command or active window logs to respect user preference (if logging is disabled)
         try:
-            from vexctx.vault.episodic import episodic_store
-            db = await episodic_store._get_db()
-            await db.execute("DELETE FROM episodes WHERE event_type IN ('terminal_cmd', 'research_action')")
-            await db.commit()
-            print("Successfully cleaned up non-AI logs (terminal_cmd, research_action) from SQLite store.")
+            from vexctx.shared.preferences import load_preferences
+            prefs = load_preferences()
+            if not prefs.get("os_logging_enabled", False):
+                from vexctx.vault.episodic import episodic_store
+                db = await episodic_store._get_db()
+                await db.execute("DELETE FROM episodes WHERE event_type IN ('terminal_cmd', 'research_action')")
+                await db.commit()
+                print("Successfully cleaned up non-AI logs (terminal_cmd, research_action) from SQLite store as logging is disabled.")
         except Exception as e:
             print(f"Error cleaning up legacy logs: {e}")
 

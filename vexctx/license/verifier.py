@@ -4,17 +4,29 @@ import jwt
 from datetime import datetime
 from vexctx.config import settings
 
+# Public key PEM for verifying licenses signed with the private key.
+# In production, this verifies signature integrity offline.
+PUBLIC_KEY_PEM = """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAm7wsnU1EC5AU89PgsKJi
+95TjQsvRgc7McIcrt3ktggnnjmwLMzl34FbbZVmLsIjMb3uop66gIHqZ7a2EQYrE
+UM/Yu69YB+7L6TVa7EV3ydqzq9fmPCeEvnSXVxRNZQ+eoFzziKc6gFuIzwxEMK2c
+LlAvGlSKJPjCafdT5n1EAwyRehQJmeM97jSpuDBakbzM0eZImKiywy67NprrAVhx
+5vJ4r98/fZRutHp6UwN3gpORpJLHr9Qa3xZa89QQQQ1i0Z8wMgiQpQOGM5+Um9tq
+rfK4NMwOnQkmEiQLRa7KpD5PVFYSfAUenZKEoTnWsBZByz3zLbHKCKbkmxP9Ooxk
+SQIDAQAB
+-----END PUBLIC KEY-----"""
+
 def verify_jwt_license(token: str) -> dict:
     """
     Decodes and cryptographically validates the JWT license key locally
-    using the shared symmetric secret.
+    using the asymmetric public key.
     """
     try:
-        # Decodes the JWT. Throws error if signature is invalid or expired.
+        # Decodes the JWT with RS256 using the public key. Throws error if signature is invalid or expired.
         payload = jwt.decode(
             token,
-            settings.VEXCTX_JWT_SECRET,
-            algorithms=["HS256"]
+            PUBLIC_KEY_PEM,
+            algorithms=["RS256"]
         )
         return payload
     except jwt.ExpiredSignatureError:

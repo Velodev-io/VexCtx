@@ -19,6 +19,13 @@ class GraphStore:
         import asyncio
         current_loop = asyncio.get_running_loop()
         if self._db is None or self._db_loop != current_loop:
+            if self._db is not None:
+                try:
+                    await self._db.close()
+                except Exception:
+                    pass
+                self._db = None
+
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             
             # Detect and safely remove plaintext database to re-initialize as encrypted
