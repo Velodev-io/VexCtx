@@ -14,10 +14,16 @@ export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeRecipe, setActiveRecipe] = useState<'curl' | 'python' | 'node'>('curl');
   const [copied, setCopied] = useState(false);
-  const installCmd = "brew tap Velodev-io/tap && brew install vexctx";
+  const [installPlatform, setInstallPlatform] = useState<'mac' | 'linux' | 'windows'>('mac');
+
+  const installCmds = {
+    mac: "brew tap Velodev-io/tap && brew install vexctx",
+    linux: "git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && ./install.sh",
+    windows: "git clone https://github.com/Velodev-io/VexCtx.git && cd VexCtx && uv sync && copy .env.example .env"
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(installCmd);
+    navigator.clipboard.writeText(installCmds[installPlatform]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -40,8 +46,8 @@ export default function Home() {
       a: 'The extension streams conversations to your local daemon at http://localhost:8765/ext/events. To prevent unauthorized websites from accessing your local vault, the extension pairs with the daemon using a unique security token generated and saved in ~/.vexctx/ext_token.txt.'
     },
     {
-      q: 'How do I install VexCTX using Homebrew?',
-      a: 'VexCTX is distributed via Homebrew. Simply tap the repository and install: brew tap Velodev-io/tap && brew install vexctx. Once the installation completes, you can start the local context daemon from any terminal window by running: vexctx --port 8765.'
+      q: 'How do I install VexCTX on macOS, Linux, or Windows?',
+      a: 'For macOS, you can use Homebrew: "brew tap Velodev-io/tap && brew install vexctx". For Linux, clone our repository and run the automated script: "./install.sh". For Windows, clone the repository, run "uv sync" to build the environment, copy the environment configuration, and run the server using "uv run uvicorn vexctx.main:app --port 8765".'
     }
   ];
 
@@ -259,13 +265,41 @@ await vex.capture({
               }}
             >
               {/* Three dots mac buttons */}
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', opacity: 0.8 }} />
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b', opacity: 0.8 }} />
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981', opacity: 0.8 }} />
               </div>
-              <span>bash — homebrew install</span>
-              <span style={{ width: '42px' }}></span>
+              
+              {/* Tabs for platform selection */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {(['mac', 'linux', 'windows'] as const).map((plat) => (
+                  <span
+                    key={plat}
+                    onClick={() => {
+                      setInstallPlatform(plat);
+                      setCopied(false);
+                    }}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: installPlatform === plat ? 'rgba(212, 163, 89, 0.15)' : 'transparent',
+                      color: installPlatform === plat ? 'var(--accent-amber)' : 'var(--text-muted)',
+                      borderColor: installPlatform === plat ? 'var(--accent-amber)' : 'transparent',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      fontWeight: installPlatform === plat ? 'bold' : 'normal',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {plat === 'mac' ? 'macOS' : plat === 'linux' ? 'Linux' : 'Windows'}
+                  </span>
+                ))}
+              </div>
+              <span style={{ fontSize: '10px', textTransform: 'lowercase', color: 'var(--text-muted)', width: '50px', textAlign: 'right' }}>
+                {installPlatform === 'mac' ? 'brew' : installPlatform === 'linux' ? 'bash' : 'powershell'}
+              </span>
             </div>
 
             {/* Terminal Body */}
@@ -287,8 +321,10 @@ await vex.capture({
               }}
             >
               <div style={{ overflowX: 'auto', whiteSpace: 'nowrap', display: 'flex', gap: '8px', color: 'var(--accent-cyan)' }}>
-                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>$</span>
-                <span>{installCmd}</span>
+                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>
+                  {installPlatform === 'windows' ? 'PS >' : '$'}
+                </span>
+                <span>{installCmds[installPlatform]}</span>
               </div>
 
               {/* Copy button */}
